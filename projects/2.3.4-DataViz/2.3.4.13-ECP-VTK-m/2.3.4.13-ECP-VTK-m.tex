@@ -1,124 +1,150 @@
 \subsubsection{\stid{4.13} ECP/VTK-m}
 
 \paragraph{Overview}
-The ECP/VTK-m project is providing the core capabilities to perform scientific visualization on Exascale architectures.
-The ECP/VTK-m project fills the critical feature gap of performing visualization and analysis on processors like graphics-based processors.
-The results of this project will be delivered in tools like ParaView, VisIt, and Ascent as well as in stand-alone form.
-Moreover, these projects are depending on this ECP effort to be able to make effective use of ECP architectures.
+As exascale simulations generate data, scientists must extract information and understand their results.
+One of the primary mechanisms for understanding these results is producing visualizations that can be viewed and manipulated.
+The VTK-m project is developing and deploying a scientific visualization library for exascale machines.
+This library can be used directly by simulation codes or by other visualization products, and VTK-m is embedded in other Exascale Computing Project (ECP) solutions and is the sole project providing support for exascale architectures.
+VTK-m supports features such as the shared-memory parallelism available on many-core CPUs and GPUs by redeveloping, implementing, and supporting necessary visualization algorithms.
 
 One of the biggest recent changes in high-performance computing is the increasing use of accelerators.
-Accelerators contain processing cores that independently are inferior to a core in a typical CPU, but these cores are replicated and grouped such that their aggregate execution provides a very high computation rate at a much lower power.
-
+Accelerators contain processing cores that independently are inferior to a core in a typical CPU, but these cores are replicated and grouped so that their aggregate execution provides a very high computation rate at a much lower power.
 Current and future CPU processors also require much more explicit parallelism.
-Each successive version of the hardware packs more cores into each processor, and technologies like hyper threading and vector operations require even more parallel processing to leverage each core's full potential.
+Each successive version of the hardware packs more cores into each processor, and technologies such as hyperthreading and vector operations require even more parallel processing to leverage each core’s full potential.
 
-VTK-m is a toolkit of scientific visualization algorithms for emerging processor architectures.
-VTK-m supports the fine-grained concurrency for data analysis and visualization algorithms required to drive extreme scale computing by providing abstract models for data and execution that can be applied to a variety of algorithms across many different processor architectures.
+The VTK-m team is providing general-purpose scientific visualization software for exascale architectures that supports shared memory parallelism and fine-grained concurrency.
+The team is focused on providing abstract models for data and execution that can be applied to a variety of algorithms across many different processor architectures along with necessary visualization algorithm implementations.
+The results of this project will be delivered in tools currently used around the world today, such as ParaView and VisIt, as well as in new tools, such as Ascent, and in a stand-alone form.
 
-The ECP/VTK-m project is building up the VTK-m codebase with the necessary visualization algorithm implementations that run across the varied hardware platforms to be leveraged at the Exascale.
-We will be working with other ECP projects, such as ALPINE, to integrate the new VTK-m code into production software to enable visualization on our HPC systems.
-
-\paragraph{Key  Challenges}
-The scientific visualization research community has been building scalable HPC algorithms for over 15 years, and today there are multiple production tools that provide excellent scalability.
+\paragraph{Key Challenges}
+The scientific visualization research community has been building scalable HPC algorithms for over 20 years, and today there are multiple production tools that provide excellent scalability.
 However, our current visualization tools are based on a message-passing programming model.
 More to the point, they rely on a coarse decomposition with ghost regions to isolate parallel execution \cite{Ahrens2001,Childs2010}.
 However, this decomposition works best when each processing element has on the order of a hundred thousand to a million data cells \cite{ParaViewTutorial} and is known to break down as we approach the level of concurrency needed on modern accelerators \cite{Moreland2012:Ultravis,Moreland2013:UltraVis}.
 
-DOE has made significant investments in HPC visualization capabilities.
-For us to feasibly update this software for the upcoming Exascale machines, we need to be selective on what needs to be updated, and we need to maximize the code we can continue to use.
-Regardless, there is a significant amount of software to be engineered and implemented, so we need to extend our development resources by simplifying algorithm implementation and providing performance portability across current and future devices.
+The VTK-m project addresses this challenge by providing the core capabilities to perform scientific visualization on exascale architectures, which can then be used within current tools, used by new libraries for in situ processing, or used directly by simulation codes.
+This fills the critical feature gap of performing efficient visualization and analysis on many-core CPU and GPU architectures.
 
 
 \paragraph{Solution Strategy}
 The ECP/VTK-m project leverages VTK-m \cite{Moreland2016:VTKm} to overcome these key challenges.
 VTK-m has a software framework that provides the following critical features.
 
-\begin{enumerate}
-\item \textbf{Visualization building blocks:}
+
+\subparagraph{Visualization Building Blocks}
   VTK-m contains the common data structures and operations required for scientific visualization.
   This base framework simplifies the development of visualization algorithms \cite{VTKmUsersGuide}.
-\item \textbf{Device portability:}
+\subparagraph{Device Portability}
   VTK-m uses the notion of an abstract device adapter, which allows algorithms written once in VTK-m to run well on many computing architectures.
   The device adapter is constructed from a small but versatile set of data parallel primitives, which can be optimized for each platform \cite{Blelloch1990}.
-  It has been shown that this approach not only simplifies parallel implementations, but also allows them to work well across many platforms \cite{Lo2012,Larsen2015,Moreland2015}.
-\item \textbf{Flexible integration:}
+  It has been shown that this approach not only simplifies parallel implementations, but also allows them to work well across many platforms \cite{Lo2012,Larsen2015,Moreland2015} and while still providing performance comparable to less portable solutions \cite{Moreland2021}.
+  Within the device adapter we are leveraging Kokkos \cite{Edwards2011} to rapidly port to ECP hardware.
+\subparagraph{Flexible Integration}
   VTK-m is designed to integrate well with other software.
   This is achieved with flexible data models to capture the structure of applications' data \cite{Meredith2012} and array wrappers that can adapt to target memory layouts \cite{Moreland2012:PDAC}.
-\end{enumerate}
 
-Even with these features provided by VTK-m, we have a lot of work ahead of us to be ready for Exascale.
-Our approach is to incrementally add features to VTK-m and expose them in tools like ParaView and VisIt.
 
 
 \begin{figure}[t]
   \centering
-  \includegraphics[height=1.5in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-Clip}\quad
-  \includegraphics[height=1.5in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-Bubbles-Density}
-  \includegraphics[height=1.5in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-Bubbles-Components}\quad
-  \includegraphics[height=1.5in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-Streamlines}
-  \includegraphics[height=1.5in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-FTLE}
+
+  \includegraphics[height=1.35in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-wdm-in-situ.png}\quad
+  \includegraphics[height=1.35in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-particle-spheres.png}%
+  \includegraphics[height=1.35in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-particle-density.png}\quad
+  \includegraphics[height=1.35in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-warpx-flow.png}\quad
+  \includegraphics[height=1.35in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-warpx-in-situ.png}\quad
   \caption{
-    Examples of recent progress in VTK-m include (from left to right) clipping to form an interval volume, connected components to identify bubbles of low density, advection of particles through time, and a generated FTLE field to identify Lagrangian coherent surfaces.
+    Examples of recent progress in VTK-m include (from left to right) in situ visualization with WDMApp simulations, particle density estimation, flow in laser wakefields, and in situ visualization with WarpX simulations.
   }
   \label{fig:VTKmRecent}
 \end{figure}
 
 \paragraph{Recent Progress}
 The VTK-m project is organized into many implementation activities.
-The following features have been completed in the FY19 fiscal year.
+The following features have been completed in the FY21 fiscal year.
+
+\subparagraph{VTK-m Releases}
+  VTK-m 1.6 was released in May 2021.
+\subparagraph{Kokkos}
+  Device adapters in VTK-m can now leverage the Kokkos programming model to more rapidly port to ECP hardware.
+\subparagraph{WDMApp}
+  Using specialized data adapters, VTK-m is able to link into the code coupling framework used by WDMApp to provide real-time in situ visualization as demonstrated in Figure \ref{fig:VTKmRecent}.
+\subparagraph{Lagrangian Basis Flows}
+  By integrating VTK-m's particle advection code, the VTK-m and ALPINE teams demonstrated high performance with significant data reduction by computing lagrangian basis flows for subsequent flow visualization \cite{Sane2021:EGPGV,Sane2021:ICCS}.
+\subparagraph{Particle Density Estimation}
+  Finding structures like bubbles in mesh-free data requires estimating the density of free-floating particles. VTK-m can now quickly estimate the density distribution of particles over a volume as demonstrated in Figure \ref{fig:VTKmRecent}.
+\subparagraph{Laser Wakefield Flow}
+  Particles in a laser wakefield move with physics particular to the electromagnetic fields. VTK-m's flow visualization is customized to properly compute particle paths in laser wakefield simulations from WarpX as shown in Figure \ref{fig:VTKmRecent}.
+\subparagraph{WarpX}
+  As the underlying implementation of geometry processing and rendering in Ascent, VTK-m provides in situ visualization to WarpX simulations as shown in Figure \ref{fig:VTKmRecent}.
+
+
+\paragraph{Preliminary Experiences on Early Access systems}
+The ECP/VTK-m team has made significant progress toward supporting visualization on the Spock early access system for Frontier during FY21.
+At the beginning of FY21, the team could compile a VTK-m smoke test with HIP and run it on an AMD GPU.
+This demonstrated running a VTK-m worklet (the encapsulation of a GPU kernel) on the GPU.
+This required resolving lots of special templating within the VTK-m software and was an achievement in its own right.
+
+However, at the beginning of FY21, most of the features of VTK-m had to be disabled.
+This included mesh structures, filtering, and rendering, which comprises the major functionality implemented within the toolkit.
+FY21 included a major overhaul of the problematic features that were preventing operation on AMD hardware.
+The biggest change was the removal of virtual methods.
+VTK-m's use of virtual methods was problematic for all GPU types and some required features were not supported on AMD.
+The removal of virtual methods required careful consideration of compiled data types that could no longer be hidden behind virtual method interfaces.
+New techniques to reduce template code paths needed to be designed.
+Another big overhaul was in the classes managing arrays.
+Array handles were redesigned to use buffer management of un-typed arrays.
+This moved much of the array management into libraries where they did not have to be recompiled for every use of every type.
+It also provided some more efficient ways to manage the allocation and transfer of data.
+
+In addition to these internal changes, the VTK-m team worked closely with the Kokkos team and had regular meetings with AMD engineers.
+Progress required changes to VTK-m, Kokkos, HIP, and compilers.
+Below is a selection of links to software updates that were required.
 
 \begin{itemize}
-\item \textbf{VTK-m Releases:}
-  VTK-m 1.3 was released in November 2018.
-  VTK-m 1.4 was released in June 2019.
-  VTK-m 1.5 was released in October 2019.
-\item \textbf{ZFP}
-  Working in collaboration with the ZFP project (now part of WBS 2.3.4.16), the ZFP compression algorithm \cite{zfp-jsm2017} is implemented in VTK-m.
-  This implementation ports across ECP platforms.
-\item \textbf{Clipping:}
-  A common visualization operation for extracting regions of interest, clipping provides mesh cutaways and interval volumes as demonstrated in Figure \ref{fig:VTKmRecent}.
-%% \item \textbf{Ghost Cells:}
-%%   Provided support for defining and stripping ghost cell information.
-\item \textbf{Merge Points:}
-  It is often necessary to collect together positions in 3-space that are nearby \cite{Yenpure2019}.
-\item \textbf{Connected Components:}
-  It can be physically significant to identify groups of elements that are mutually connected by either topology or common field attributes as demonstrated in Figure \ref{fig:VTKmRecent}.
-\item \textbf{Particle Advection:}
-  Many flow visualization algorithms depend on computing the movement of weightless particles in a flow vector field, which may change over time \cite{Pugmire2018}.
-  These include stream lines, path lines, Lagrangian coherent structures, and stream surfaces as demonstrated in Figure \ref{fig:VTKmRecent}.
-  We have also added tube geometry to improve rendering representation.
-%% \item \textbf{Mesh Warping:}
-%%   Simulations often represent Lagrangian movements in terms of displacements, which have to be applied to geometry to be properly visualized.
-%% \item \textbf{Contouring:}
-%%   All 3D cell shapes are now supported in our contouring algorithm.
-\item \textbf{Mesh Quality:}
-  Cell metrics provide important physical and meta information about a geometry.
-\item \textbf{Surface Normals:}
-  Surface normals are an important feature for proper representation in rendering.
-  Ensuring consistent ordering is important to avoid rendering artifacts.
-\item \textbf{Lightweight Cell Library:}
-  To help consolidate common code between VTK-m and other software, the code for cell management has been extracted into its own lightweight library.
-%% \item \textbf{Extruded Cell Sets:}
-%%   ECP's XGC simulation code uses an extrusion of a surface mesh for its data representation.
-%%   A similar representation is added to VTK-m for zero-copy data ingestion.
+  \setlength{\itemsep}{0pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+\item\url{https://github.com/kokkos/kokkos/issues/3431}
+\item\url{https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2282}
+\item\url{https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/2276}
+\item\url{https://github.com/ROCm-Developer-Tools/HIP/pull/2183}
+\item\url{https://github.com/spack/spack/pull/19816}
+\item\url{https://github.com/kokkos/kokkos/issues/3581}
+\item\url{https://github.com/kokkos/kokkos/pull/3953}
+\item\url{https://gitlab.kitware.com/cjy7117/vtk-m/-/tree/hip-support}
+\item\url{https://reviews.llvm.org/D112733}
 \end{itemize}
+
+Currently, VTK-m with its test suite can be compiled on Spock.
+There are some caveats, however.
+It requires a ROCm 5.0 pre-release and the latest head of Kokkos.
+There is also currently an issue with linking the rendering library, which is being looked into.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=3in]{projects/2.3.4-DataViz/2.3.4.13-ECP-VTK-m/VTKm-spock-timing.png}
+  \caption{Performance improvement of VTK-m's unstructured gradient benchmark under Kokkos.}
+  \label{fig:VTKmPerf}
+\end{figure}
+
+The VTK-m team has also been working with the Kokkos team to improve performance while using Kokkos to drive devices, which is necessary for AMD GPUs.
+During this time, a performance issue for estimating gradients in unstructured grids was found.
+The VTK-m and Kokkos teams worked together to identify a register spilling problem in one of the GPU kernels.
+The kernel launch parameters for this case, and a 12-fold improvement for this algorithm was observed on Spock.
 
 \paragraph{Next Steps}
-Our next efforts include:
+The VTK-m team is focused on ensuring the success of our KPP-3 metric and will take the following next steps.
 
-\begin{itemize}
-%% \item \textbf{Structured Grid Contouring:}
-%%   There are several optimizations that can be made for contouring in structured grids.
-\item \textbf{Performance Regression Testing:}
-  It is important to ensure that in addition to being correct, the performance of VTK-m code does not regress.
-\item \textbf{Kokkos Devices:}
-  We will explore the feasibility of using the Kokkos libraries to implement the device porting layer.
-%% \item \textbf{Improved Testing:}
-%%   We plan to improve the testing layer by supporting image comparison and data files.
-\item \textbf{Higher Order Meshes:}
-  Many ECP simulations use high order interpolation techniques on their meshes.
-\end{itemize}
 
-\noindent
-{\tiny Sandia National Laboratories is a multimission laboratory managed and operated by National Technology \& Engineering Solutions of Sandia, LLC, a wholly owned subsidiary of Honeywell International Inc., for the U.S. Department of Energy's National Nuclear Security Administration under contract DE-NA0003525. \hfill SAND~2019-13411~R
-\par}
+\subparagraph{Satisfy Needs of ECP Applications}
+  The VTK-m team's KPP-3 milestones hinge on applications using VTK-m code in a useful way.
+  To ensure that VTK-m is satisfying the needs of ECP applications, the team will making modifications as needed.
+  The initial focus will be with the WarpX, WDMApp, MFiX-Exa, and Nyx applications.
+\subparagraph{Porting to Exascale Architecture}
+  As Frontier becomes available, the VTK-m team will ensure that the software compiles, runs, and performs well on the platform.
+\subparagraph{Ease of Adoption}
+  The VTK-m team will address complications with integrating the VTK-m software with other software projects.
+  Part of this work includes isolating external code from device code.
+  Another part includes improving compile times.
+

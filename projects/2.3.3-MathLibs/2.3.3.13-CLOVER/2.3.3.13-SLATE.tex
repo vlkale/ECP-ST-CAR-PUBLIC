@@ -1,54 +1,55 @@
-\subsubsection{\stid{3.13} SLATE}\label{subsubsect:slate}
+%\newpage
+\subsubsection{\stid{3.13} CLOVER Sub-project: SLATE}\label{subsubsect:slate}
 
-
+%-------------------------------------------------------------------------------
 \paragraph{Overview}
 
-The Software for Linear Algebra Targeting Exascale (SLATE) intends to
-provide fundamental dense linear algebra capabilities
-to the US Department of Energy (DOE)
-and to the high-performance computing (HPC) community at large.
-To this end, SLATE will provide
-parallel Basic Linear Algebra Subprograms (BLAS),
-linear systems solvers, least square solvers,
-singular value and eigenvalue solvers.
-
+SLATE (Software for Linear Algebra Targeting Exascale)
+provides fundamental dense linear algebra capabilities
+to the DOE and the HPC community at large.
+To this end, SLATE provides
+parallel BLAS (basic linear algebra subprograms), norms,
+linear system, least squares,
+singular value, and eigenvalue solvers.
+%
 The ultimate objective of SLATE is to replace the
-venerable Scalable Linear Algebra PACKage (ScaLAPACK) library,
+venerable ScaLAPACK (Scalable Linear Algebra PACKage) library,
 which has become the industry standard for dense linear algebra operations
-in distributed-memory environments.
-However, after two decades of operation,
-ScaLAPACK is past the end of its life cycle and overdue for a replacement,
-as it can hardly be retrofitted to support GPUs,
-which are an integral part of today's HPC hardware infrastructure.
+in distributed-memory environments, but is past its end of life
+and can't be readily retrofitted to support GPUs.
+% After two decades of operation,
+% ScaLAPACK is past the end of its life cycle and overdue for a replacement,
+% as it can hardly be retrofitted to support GPUs,
+% which are an integral part of today's HPC hardware infrastructure.
 
 Primarily, SLATE aims to extract the full performance potential and maximum
-scalability from modern HPC machines with large numbers nodes,
-large numbers of cores per node, and multiple GPUs per node.
-For typical dense linear algebra workloads, this means getting close
-to the theoretical peak performance and scaling to the full size of the machine
-(i.e., thousands to tens of thousands of nodes).
-This is to be accomplished in a portable manner by relying mostly on standards
-like MPI and OpenMP.
-
-SLATE functionalities will first be delivered to the ECP applications
-that most urgently require SLATE capabilities
-(NWChem, GAMESS, EXAALT, QMCPACK, CANDLE, etc.)
-and to other software libraries
-that rely on underlying dense linear algebra services
-(STRUMPACK, SuperLU, etc.).
+scalability from modern multi-node HPC machines with
+many cores and multiple GPUs per node.
+% For typical dense linear algebra workloads, this means getting close
+% to the theoretical roofline peak performance and scaling to the full size of
+% the machine.
+This is accomplished in a portable manner by relying on standards
+such as MPI and OpenMP.
+%, and encapsulating support for different
+% vendors in the BLAS++ and LAPACK++ libraries.
+%
+% SLATE functionalities will first be delivered to the ECP applications
+% that most urgently require SLATE capabilities
+% (NWChem, GAMESS, EXAALT, QMCPACK, CANDLE, etc.)
+% and to other software libraries
+% that rely on underlying dense linear algebra services
+% (STRUMPACK, SuperLU, etc.).
 Figure~\ref{fig:slate-architecture} shows the role of SLATE
 in the ECP software stack.
 
-While the initial objective of SLATE is to serve as a successful,
-drop-in replacement for ScaLAPACK with support for GPU accelerators,
-the ultimate goal of SLATE is to deliver dense linear algebra capabilities
-way beyond the capabilities of ScaLAPACK.
-The low-hanging fruits include implementation of more communication-avoiding
-algorithms and randomization algorithms
-(based on random projections and sampling).
-Also within the reach of SLATE are features like:
-support for variable size tiles, support for low-rank compressed tiles,
-and possibly support for block-sparse matrices.
+% While the initial objective of SLATE is to serve as a successful,
+% drop-in replacement for ScaLAPACK with support for GPU accelerators,
+% the ultimate goal of
+SLATE also seeks to deliver dense linear algebra capabilities
+beyond the capabilities of ScaLAPACK,
+including new features such as communication-avoiding
+and randomized algorithms, as well as the potential to
+support variable size tiles and block low-rank compressed tiles.
 
 \begin{figure}[htb]
     \centering
@@ -57,112 +58,172 @@ and possibly support for block-sparse matrices.
     SLATE in the ECP software stack.}
 \end{figure}
 
-\paragraph{Key  Challenges}
+\paragraph{Key Challenges}
+Each element described above faces key challenges to successful implementation and deployment.
 
-\begin{enumerate}
-\item
-\textbf{Designing from the ground up:}
-The SLATE project's primary challenge stems from the need to design the package
-from the ground up, as no existing software package offers
-a viable path forward for efficient support of GPUs
-in a distributed-memory environment.
-\item
-\textbf{Facing harsh hardware realities:}
-SLATE is being developed in a harsh hardware environment, where virtually
+
+% \item
+% \textbf{Designing from the ground up:}
+% The SLATE project's primary challenge stems from the need to design the package
+% from the ground up, as no existing software package offers
+% a viable path forward for efficient support of GPUs
+% in a distributed-memory environment.
+
+
+\subparagraph{Facing Harsh Hardware Realities}
+SLATE targets a difficult hardware environment, where virtually
 all the processing power is on the GPU side.
-Achieving efficiency requires very aggressive offload to GPU accelerators
-and very careful optimization of multiple bottlenecks.
-Being a distributed computing package, SLATE also faces the grim reality
-of the interconnection technology lagging horribly behind the computing
-capabilities of the GPUs.
-\item
-\textbf{Facing harsh software realities:}
-SLATE is being developed using cutting-edge software technologies,
-and relies on modern features of the C++ language and recent extensions
-to the OpenMP standard, many of which are not fully supported by compilers
+Achieving efficiency requires aggressive offload to GPU accelerators
+and optimization of communication bottlenecks.
+% and careful optimization of multiple bottlenecks, including
+% interconnect technology lagging behind the computing
+% capabilities of the GPUs.
+
+
+\subparagraph{Facing Harsh Software Realities}
+SLATE uses cutting-edge software technologies,
+including modern C++ features and recent extensions
+to the OpenMP standard, which may not be fully supported by compilers
 and their runtime environments.
-In terms of GPU acceleration, standardized solutions are still in flux.
-Also, while complete parallel programming frameworks exist, at this stage
-they have to be considered research prototypes.
-\end{enumerate}
+Standardized solutions for GPU acceleration are still in flux.
+% Also, while complete parallel programming frameworks exist, at this stage
+% they have to be considered research prototypes.
 
+
+
+%-------------------------------------------------------------------------------
 \paragraph{Solution Strategy}
+To mitigate these challenges, the team proposes the following actions.
 
-\begin{enumerate}
-\item
-\textbf{Evolving design:}
+
+\subparagraph{Evolving Design}
 Due to the inherent challenges of designing a software package
 from the ground up, the SLATE project started
 with a careful analysis of the existing and emerging
 implementation technologies~\cite{abdelfattah2017roadmap},
-and followed with a phase
-of laying out the initial design~\cite{kurzak2017designing}.
-Since then, the team rolls out new computational routines every quarter,
-while frequently refactoring and occasionally redesigning the underlying
-software infrastructure.
-\item
-\textbf{Focus on GPUs:}
+followed by an initial design~\cite{kurzak2017designing}
+that has solidified~\cite{gates2019slate-design},
+but we continue to reevaluate and refactor as needed.
+
+\subparagraph{Focus on GPUs}
 Efficient GPU acceleration is the primary focus of performance
 engineering efforts in SLATE.
 Where applicable, highly optimized vendor implementations of GPU operations
-are used, such as the batch {\tt gemm} routine.
-Where necessary, custom GPU kernels are developed, like in the case of computing
+are used, such as the batched \texttt{gemm} routine.
+Where necessary, custom GPU kernels are developed, as for computing
 matrix norms.
-Care is taken to hide communication to and from the GPUs by overlapping it with
-execution of GPU computations.
-\item
-\textbf{Community engagement:}
-The SLATE team interact on a regular basis with the OpenMP community,
+Care is taken to hide communication by overlapping it with GPU computations.
+
+\subparagraph{Community Engagement}
+The SLATE team interacts on a regular basis with the OpenMP community,
 represented in ECP by the SOLLVE project, and with the MPI community,
 represented in ECP by the OMPI-X project and the Exascale MPI project.
 The SLATE team also engages the vendor community through our contacts
-at Intel, NVIDIA, AMD, and ARM.
-\end{enumerate}
+at HPE Cray, IBM, Intel, NVIDIA, AMD, and ARM.
 
+%-------------------------------------------------------------------------------
 \paragraph{Recent Progress}
+Recent progress in this area includes several key developments.
 
-During each quarter of 2018, the SLATE team has been adding to its suite
-by releasing new computational routines:
-parallel Level 3 BLAS in March,
-parallel norms in June,
-linear systems solvers (LLT, LU, LDLT) in September,
-and least squares solvers (CAQR/LQ) in December.
-All routines are available in all standard precisions:
-single real (S), single complex (C), double real (D), and double complex (Z),
-all accompanied by appropriate testers.
-In addition to SLATE's native, C++ API, compatibility APIs for LAPACK
-and ScaLAPACK users are also provided, so that SLATE can serve
-as a drop-replacement.
-All developments are documented in SLATE Working Notes
-\footnote{\url{http://www.icl.utk.edu/publications/series/swans}.}
 
+\subparagraph{Port to AMD and Intel Platforms}
+Originally, SLATE was developed using NVIDIA CUDA. We ported BLAS++ to
+the AMD ROCm and Intel oneAPI platforms, and use it as a portability
+layer for SLATE. Our CUDA kernels were ported to HIP using
+AMD's \texttt{hipify} tool. We are also porting kernels to OpenMP
+Offload, which provides an option for all platforms (NVIDIA, AMD, and
+Intel GPUs).
+
+\subparagraph{Performance Improvements}
+We improved performance of several major routines, including
+Cholesky, QR, eigenvalue, and singular value decompositions. More components
+of Cholesky and QR are now on the GPU. For the eigenvalue
+problem, we parallelized a major component and accelerated it using
+GPUs, resulting in significant improvements, as shown in
+Figure~\ref{fig:slate-he2hb}.
+
+\begin{figure}
+    \centering
+    \subfloat[][One node]{
+        \includegraphics[width=0.4\textwidth]{projects/2.3.3-MathLibs/2.3.3.13-CLOVER/slate-he2hb-1node}
+    }
+    \subfloat[][Four nodes]{
+        \includegraphics[width=0.4\textwidth]{projects/2.3.3-MathLibs/2.3.3.13-CLOVER/slate-he2hb-4node}
+    }
+    \caption{Performance improvement in Hermitian reduction to band for
+    eigenvalue problem. Each node has $2 \times 10$ core Intel Haswell E5-2650 v3.}
+    \label{fig:slate-he2hb}
+\end{figure}
+
+\subparagraph{Added Eigenvector Computation}
+We added computation of eigenvectors to the eigenvalue solver, and are
+working on the divide-and-conquer algorithm, which exhibits
+better performance than the QR iteration algorithm for computing
+eigenvectors.
+
+\noindent
+Developments are documented in SLATE Working Notes.\footnote{
+\url{http://www.icl.utk.edu/publications/series/swans}}
+
+%-------------------------------------------------------------------------------
+\paragraph{Preliminary Experiences on Early Access systems}
+
+The SLATE team has been using the Early Access Systems to port SLATE to
+the AMD ROCm and Intel oneAPI GPU architectures. This includes machines
+with pre-release hardware and software, as well as the recent Spock and
+Crusher machines with AMD CPU and GPU hardware at Oak Ridge National
+Laboratory. We have used these engagements to benchmark early versions
+of the system software stack, and reported various performance and
+correctness issues to AMD, Intel, and Cray. Early results on Spock in
+Figure~\ref{fig:slate-spock-gemm} show the SLATE matrix multiply
+(\texttt{dgemm}) achieves good performance using multiple nodes and
+multiple GPUs. We have also demonstrated the Cholesky, LU, and QR
+factorizations (\texttt{dpotrf}, \texttt{dgeqrf}, \texttt{dgetrf}) in
+Figure~\ref{fig:slate-spock-trf}, and are continuing work to tune the
+performance, particularly of communication since AMD has made direct
+GPU-to-GPU MPI communication efficient.
+
+\begin{figure}
+    \centering
+    % \the\textwidth  % 469.75502pt
+    \subfloat[][SLATE matrix multiply]{
+        \label{fig:slate-spock-gemm}
+        \includegraphics[width=0.45\textwidth]{projects/2.3.3-MathLibs/2.3.3.13-CLOVER/slate-spock-gemm}
+    }
+    \subfloat[][SLATE factorizations]{
+        \label{fig:slate-spock-trf}
+        \includegraphics[width=0.45\textwidth]{projects/2.3.3-MathLibs/2.3.3.13-CLOVER/slate-spock-trf}
+    }
+    \caption{Performance on Spock (4 nodes, 16 AMD MI100 GPUs).}
+\end{figure}
+
+%-------------------------------------------------------------------------------
 \paragraph{Next Steps}
+The following efforts have been identified for the next phase of the project.
 
-\begin{enumerate}
-\item
-\textbf{Mixed-precision Linear Solvers:}
-We plan to implement mixed-precision linear solvers by the end of March 2019.
-Mixed precision routines factor the matrix in lower precision, e.g., single,
-and compute the linear system solution in higher precision, e.g., double,
-in the process of iterative refinement.
-In most cases, results in the high precision can be produced at the speed
-of computing in the low precision.
-The half precision of the Tensor Cores of the V100 GPUs are a possible target
-of this technique.
-\item
-\textbf{Matrix Inversion Routines:}
-We plan to implement matrix inversion routines by the end of June 2019.
-Explicit matrix inverses are required by applications in computational
-chemistry and statistics, and offer a high potential for optimization
-by pipelining the different algorithmic steps.
-Routines for inverting general, symmetric positive definite, and symmetric
-indefinite matrices are planned.
-\item
-\textbf{SVD and EVP Solvers:}
-We plan to implement SVD routines and symmetric EVP routines
-by the end of September 2019.
-The implementations will be based on state-of-the-art two-stage reductions
-and divide-and-conquer algorithms.
-Superior performance is expected, as well as strong benefit
-from GPU acceleration.
-\end{enumerate}
+
+\subparagraph{CA-QR and CA-LU}
+Communication avoiding (CA) routines reorganize the traditional computation
+to minimize the number and volume of communications.
+Since communication is a major
+bottleneck, both between nodes and between different memories within a node,
+we expect CA algorithms to improve SLATE's performance.
+In particular, we are optimizing QR factorizations with a focus on tall-skinny
+matrices, such as solving 10,000,000 $\times$ 1000
+least squares problems. There are several avenues to explore including
+CA-QR and Cholesky-QR algorithms.
+
+\subparagraph{Optimize Level 2 BLAS}
+For parallel BLAS, the initial implementations focused on the case where
+the output matrix $C$ was large. However, the output matrix is often a
+single vector, corresponding to Level 2 BLAS, or a few vectors.
+For instance, solving a
+single right-hand side $b$ in $Ax = b$. These operations require a different
+algorithm, so that the computation occurs where the large input matrix $A$
+resides, rather than where the output matrix $b$ or $x$ resides. This
+lack of Level 2 BLAS optimizations was identified as a major bottleneck
+in our mixed-precision iterative refinement algorithms. We will optimize
+our existing matrix-multiplication routines to handle these cases,
+automatically switching algorithms as needed.
+
+
